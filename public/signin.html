@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1769b3" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Customer Sign-In</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="tablet">
+      <section class="form-panel">
+        <div class="form-topline">
+          <a class="back-link" href="/" data-requires-exit-login="true">←</a>
+          <div class="language-switch" role="group" aria-label="Language">
+            <button type="button" class="language-option active" data-lang="en">English</button>
+            <button type="button" class="language-option" data-lang="es">Español</button>
+          </div>
+        </div>
+
+        <header>
+          <p class="eyebrow" data-i18n="eyebrow">Welcome</p>
+          <h1 data-i18n="title">Sign in for service</h1>
+        </header>
+
+        <form id="signin-form">
+          <fieldset>
+            <legend data-i18n="categoryLabel">What can we help with?</legend>
+            <div class="segmented">
+              <label>
+                <input type="radio" name="category" value="Quote" required />
+                <span data-i18n="quote">Quote</span>
+              </label>
+              <label>
+                <input type="radio" name="category" value="Pickup" required />
+                <span data-i18n="pickup">Pickup</span>
+              </label>
+              <label>
+                <input type="radio" name="category" value="Place Order" required />
+                <span data-i18n="placeOrder">Place Order</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="customer-info-step" data-customer-info-step hidden>
+            <div class="field-grid">
+              <label>
+                <span data-i18n="name">Name</span>
+                <input name="name" autocomplete="name" required />
+              </label>
+              <label>
+                <span data-i18n="phone">Phone</span>
+                <input name="phone" autocomplete="tel" required />
+              </label>
+              <label>
+                <span data-i18n="companyOptional">Company name (optional)</span>
+                <input name="company" autocomplete="organization" />
+              </label>
+              <label>
+                <span data-i18n="emailOptional">Email (optional)</span>
+                <input name="email" type="email" autocomplete="email" />
+              </label>
+            </div>
+
+            <button class="primary-action" type="submit" data-i18n="submit">Join queue</button>
+            <p class="form-message" id="form-message" role="status"></p>
+          </div>
+        </form>
+      </section>
+    </main>
+    <script src="/env.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

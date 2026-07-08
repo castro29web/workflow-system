@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1769b3" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Workflow System</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="home">
+    <main class="shell">
+      <section class="app-header">
+        <div>
+          <h1 data-i18n="homeTitle">Workflow System</h1>
+        </div>
+        <div class="view-actions">
+          <div class="language-switch" role="group" aria-label="Language">
+            <button type="button" class="language-option active" data-lang="en">English</button>
+            <button type="button" class="language-option" data-lang="es">Español</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="route-grid" aria-label="Application views">
+        <a class="route-tile sign-in-tile" href="/signin.html">
+          <span class="tile-icon">↗</span>
+          <strong data-i18n="routeSignIn">Customer Sign-In</strong>
+          <small data-i18n="routeSignInDesc">Tablet form with English and Spanish options.</small>
+        </a>
+        <a class="route-tile" href="/desk.html">
+          <span class="tile-icon">▦</span>
+          <strong data-i18n="routeDesk">Front Desk</strong>
+          <small data-i18n="routeDeskDesc">Manage wait times and route work to To-Go or Install.</small>
+        </a>
+        <a class="route-tile" href="/installers.html">
+          <span class="tile-icon">✓</span>
+          <strong data-i18n="routeInstallers">Preparation</strong>
+          <small data-i18n="routeInstallersDesc">See the live assigned queue and customer status.</small>
+        </a>
+        <a class="route-tile display-tile" href="/display.html">
+          <span class="tile-icon">◉</span>
+          <strong data-i18n="routeDisplay">TV Queue</strong>
+          <small data-i18n="routeDisplayDesc">Public position display for the waiting area.</small>
+        </a>
+      </section>
+    </main>
+    <script src="/env.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

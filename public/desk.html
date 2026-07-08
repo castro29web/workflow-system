@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1769b3" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Front Desk Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="workspace">
+      <section class="toolbar">
+        <div>
+          <a class="back-link" href="/">←</a>
+          <p class="eyebrow" data-i18n="frontDeskEyebrow">Front desk</p>
+          <h1 data-i18n="deskTitle">Customer sign-ins</h1>
+        </div>
+        <div class="view-actions">
+          <div class="language-switch" role="group" aria-label="Language">
+            <button type="button" class="language-option active" data-lang="en">English</button>
+            <button type="button" class="language-option" data-lang="es">Español</button>
+          </div>
+          <div class="live-indicator"><span></span> <span data-i18n="live">Live</span></div>
+        </div>
+      </section>
+      <section class="desk-table" id="desk-list" aria-live="polite"></section>
+    </main>
+    <script src="/env.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

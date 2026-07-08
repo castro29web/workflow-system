@@ -1,0 +1,19 @@
+{
+  "name": "Workflow System",
+  "short_name": "Workflow",
+  "description": "Customer sign-in, front desk, preparation, and TV queue workflow.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f4ec",
+  "theme_color": "#1769b3",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

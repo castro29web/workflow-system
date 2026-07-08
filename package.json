@@ -1,0 +1,15 @@
+{
+  "name": "install-queue",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --check server.js && node --check public/app.js",
+    "dev": "node server.js",
+    "write-env": "node scripts/write-env.js",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

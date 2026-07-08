@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1769b3" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Queue Display</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="display-body">
+    <main class="display-screen">
+      <header class="display-header">
+        <div class="display-title-row">
+          <a class="back-link display-back" href="/">←</a>
+          <div>
+            <p class="eyebrow" data-i18n="displayEyebrow">Customer queue</p>
+            <h1 data-i18n="displayTitle">Customer Line</h1>
+          </div>
+        </div>
+        <div class="view-actions">
+          <time id="clock"></time>
+        </div>
+      </header>
+      <section class="public-list" id="public-list" aria-live="polite"></section>
+    </main>
+    <script src="/env.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

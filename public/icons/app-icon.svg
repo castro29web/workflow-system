@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Workflow System">
+  <rect width="512" height="512" rx="96" fill="#f7f4ec"/>
+  <rect x="86" y="106" width="340" height="300" rx="42" fill="#1769b3"/>
+  <rect x="124" y="152" width="264" height="44" rx="22" fill="#ffffff"/>
+  <rect x="124" y="234" width="172" height="44" rx="22" fill="#ffffff"/>
+  <rect x="124" y="316" width="226" height="44" rx="22" fill="#ffffff"/>
+</svg>

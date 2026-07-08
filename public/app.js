@@ -1092,7 +1092,7 @@ function renderInstallers() {
 function renderDisplay() {
   const list = document.querySelector("#public-list");
   if (!list) return;
-  const publicQueue = queue.filter((entry) => entry.status !== "Order Taken");
+  const publicQueue = queue.filter((entry) => entry.status === "Waiting" && !entry.orderTakenBy);
 
   if (!publicQueue.length) {
     list.innerHTML = `<div class="public-empty">${t("queueEmpty")}</div>`;

@@ -674,6 +674,10 @@ small {
   background: #6f5ca8;
 }
 
+.status.ready {
+  background: #1466b8;
+}
+
 .status.complete {
   background: var(--accent);
 }
@@ -696,6 +700,22 @@ small {
 .action-row .has-comment {
   background: #dce9f6;
   color: var(--accent-dark);
+}
+
+.action-row .finalize-button {
+  background: #123f72;
+}
+
+.quality-check-hint {
+  background: #fff4dd;
+  border: 1px solid #f0cd83;
+  border-radius: 8px;
+  color: #7a4a00;
+  display: inline-flex;
+  font-weight: 900;
+  margin-top: 6px;
+  padding: 5px 8px;
+  text-transform: uppercase;
 }
 
 .job-toggle {

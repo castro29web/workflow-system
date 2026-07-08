@@ -8,7 +8,7 @@ const translations = {
     routeDesk: "Front Desk",
     routeDeskDesc: "Manage wait times and route work to To-Go or Install.",
     routeInstallers: "Preparation",
-    routeInstallersDesc: "See the live assigned queue and customer status.",
+    routeInstallersDesc: "See assigned customers and order status.",
     routeDisplay: "TV Queue",
     routeDisplayDesc: "Public position display for the waiting area.",
     frontDeskEyebrow: "Front desk",
@@ -91,6 +91,9 @@ const translations = {
     statusInstall: "Install",
     statusComplete: "Complete",
     statusOrderTaken: "Order Taken",
+    statusReady: "Order Done",
+    finalizeOrder: "Finalize Order",
+    qualityCheck: "Quality check!",
     staffNameTitle: "Staff name required",
     staffNamePrompt: "Enter your name before changing this customer card.",
     staffName: "Staff name",
@@ -117,7 +120,7 @@ const translations = {
     routeDesk: "Recepción",
     routeDeskDesc: "Administre tiempos de espera y envíe trabajos a To-Go o Instalación.",
     routeInstallers: "Preparación",
-    routeInstallersDesc: "Vea la fila asignada y el estado de cada cliente.",
+    routeInstallersDesc: "Vea clientes asignados y el estado de cada orden.",
     routeDisplay: "Fila en TV",
     routeDisplayDesc: "Pantalla pública de posición para la sala de espera.",
     frontDeskEyebrow: "Recepción",
@@ -200,6 +203,9 @@ const translations = {
     statusInstall: "Instalación",
     statusComplete: "Completado",
     statusOrderTaken: "Orden tomada",
+    statusReady: "Orden lista",
+    finalizeOrder: "Finalizar orden",
+    qualityCheck: "¡Revisión de calidad!",
     staffNameTitle: "Nombre requerido",
     staffNamePrompt: "Ingrese su nombre antes de cambiar esta tarjeta de cliente.",
     staffName: "Nombre del empleado",
@@ -298,6 +304,7 @@ function displayStatus(status) {
     "To-Go": "statusToGo",
     Install: "statusInstall",
     "Order Taken": "statusOrderTaken",
+    Ready: "statusReady",
     Complete: "statusComplete"
   };
   return t(keys[status] || status);
@@ -819,6 +826,11 @@ function renderDesk() {
                     : ""
                 }
                 ${
+                  entry.status === "Ready"
+                    ? `<small class="quality-check-hint">${t("qualityCheck")}</small>`
+                    : ""
+                }
+                ${
                   hasRealUpdate(entry)
                     ? `<small class="comment-preview">${t("updatedBy")} ${escapeHtml(entry.lastEditedBy)}</small>`
                     : ""
@@ -837,6 +849,13 @@ function renderDesk() {
               ${
                 entry.status === "Waiting" && !entry.orderTakenBy
                   ? `<button data-status="Order Taken" data-id="${entry.id}">${t("takeOrder")}</button>`
+                  : entry.status === "Ready"
+                  ? `
+                    <button data-status="Complete" data-id="${entry.id}" class="finalize-button">${t("finalizeOrder")}</button>
+                    <button type="button" data-toggle-comment="${entry.id}" class="quiet ${entry.comments ? "has-comment" : ""}">
+                      ${t("comments")}
+                    </button>
+                  `
                   : `
                     <div class="job-toggle" role="group" aria-label="${t("jobTypeLabel")}">
                       <button data-status="To-Go" data-id="${entry.id}" class="${entry.status === "To-Go" ? "active" : ""}">
@@ -846,7 +865,6 @@ function renderDesk() {
                         ${t("install")}
                       </button>
                     </div>
-                    <button data-status="Complete" data-id="${entry.id}" class="quiet">${t("done")}</button>
                     <button type="button" data-toggle-comment="${entry.id}" class="quiet ${entry.comments ? "has-comment" : ""}">
                       ${t("comments")}
                     </button>
@@ -1085,7 +1103,7 @@ function renderInstallers() {
     .join("");
 
   list.querySelectorAll("button[data-installer-done]").forEach((button) => {
-    button.addEventListener("click", () => updateStatus(button.dataset.installerDone, "Complete"));
+    button.addEventListener("click", () => updateStatus(button.dataset.installerDone, "Ready"));
   });
 }
 

@@ -22,7 +22,7 @@ const frontDeskClients = new Set();
 let entries = [];
 
 const categoryOrder = ["Quote", "Pickup", "Place Order"];
-const statusOrder = ["Waiting", "To-Go", "Install", "Order Taken", "Complete"];
+const statusOrder = ["Waiting", "To-Go", "Install", "Order Taken", "Ready", "Complete"];
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",

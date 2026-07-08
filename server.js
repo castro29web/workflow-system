@@ -88,6 +88,7 @@ function publicEntry(entry) {
     company: entry.company,
     comments: entry.comments || "",
     removalRequired: Boolean(entry.removalRequired),
+    jobType: entry.jobType || (entry.status === "To-Go" || entry.status === "Install" ? entry.status : ""),
     orderTakenBy: entry.orderTakenBy || "",
     orderTakenAt: entry.orderTakenAt || null,
     preparedBy: entry.preparedBy || "",
@@ -265,6 +266,7 @@ async function handleApi(req, res, url) {
       email: String(input.email || "").trim(),
       comments: "",
       removalRequired: false,
+      jobType: "",
       orderTakenBy: "",
       orderTakenAt: null,
       preparedBy: "",
@@ -299,6 +301,9 @@ async function handleApi(req, res, url) {
     entry.status = input.status;
     if (Object.hasOwn(input, "removalRequired")) {
       entry.removalRequired = Boolean(input.removalRequired);
+    }
+    if (input.status === "To-Go" || input.status === "Install") {
+      entry.jobType = input.status;
     }
     if (input.status === "Order Taken") {
       const orderTakenBy = String(input.orderTakenBy || input.staffName || "").trim();

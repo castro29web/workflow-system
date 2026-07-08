@@ -43,7 +43,7 @@ const translations = {
     doneOrders: "Done Orders",
     noDoneOrders: "No completed orders yet.",
     doneOrdersHidden: "Choose a range to show completed orders.",
-    doneToday: "Today",
+    doneToday: "24 hrs",
     doneLast7: "Last 7 days",
     doneLast30: "Last 30 days",
     doneShowAll: "Show all",
@@ -160,7 +160,7 @@ const translations = {
     doneOrders: "Órdenes terminadas",
     noDoneOrders: "No hay órdenes completadas.",
     doneOrdersHidden: "Elija un rango para ver órdenes completadas.",
-    doneToday: "Hoy",
+    doneToday: "24 hrs",
     doneLast7: "Últimos 7 días",
     doneLast30: "Últimos 30 días",
     doneShowAll: "Ver todo",
@@ -648,6 +648,11 @@ function companyLine(entry) {
   return `${t("company")}: ${companyValue(entry)}`;
 }
 
+function displayJobType(entry) {
+  const jobType = entry.jobType || (entry.status === "To-Go" || entry.status === "Install" ? entry.status : "");
+  return jobType ? displayStatus(jobType) : t("notSet");
+}
+
 function contactDraftFor(entry) {
   return contactDrafts.get(entry.id) || {
     company: entry.company || "",
@@ -669,13 +674,10 @@ function filteredDoneOrders() {
   if (doneOrdersView === "hidden") return [];
   if (doneOrdersView === "all") return completedOrders;
   if (doneOrdersView === "today") {
-    const start = new Date();
-    start.setHours(8, 0, 0, 0);
-    const end = new Date();
-    end.setHours(20, 0, 0, 0);
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
     return completedOrders.filter((entry) => {
       const timestamp = doneOrderTimestamp(entry);
-      return timestamp >= start.getTime() && timestamp <= end.getTime();
+      return timestamp >= cutoff;
     });
   }
 
@@ -774,6 +776,10 @@ function renderDoneOrders() {
             <div>
               <span>${t("tableCategory")}</span>
               <strong>${escapeHtml(displayCategory(entry.category))}</strong>
+            </div>
+            <div>
+              <span>${t("jobTypeLabel")}</span>
+              <strong>${escapeHtml(displayJobType(entry))}</strong>
             </div>
             <div>
               <span>${t("orderTakenBy")}</span>

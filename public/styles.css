@@ -184,8 +184,7 @@ p {
   width: 42px;
 }
 
-.language-switch,
-.segmented {
+.language-switch {
   background: #edf4fb;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -194,14 +193,30 @@ p {
   padding: 4px;
 }
 
-.language-option,
-.segmented span {
+.segmented {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.language-option {
   border: 0;
   border-radius: 6px;
   cursor: pointer;
   display: block;
   font-weight: 800;
   padding: 12px 18px;
+}
+
+.segmented span {
+  background: #edf4fb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--accent-dark);
+  cursor: pointer;
+  display: block;
+  font-weight: 900;
+  padding: 18px 16px;
 }
 
 .language-option {
@@ -212,6 +227,7 @@ p {
 .language-option.active,
 .segmented input:checked + span {
   background: var(--accent);
+  border-color: var(--accent);
   color: white;
 }
 
@@ -236,7 +252,7 @@ label span {
 }
 
 .segmented label {
-  flex: 1;
+  min-width: 0;
 }
 
 .segmented input {
@@ -1169,7 +1185,7 @@ small {
   }
 
   .segmented {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .public-row {

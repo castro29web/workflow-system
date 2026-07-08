@@ -894,11 +894,6 @@ function renderDesk() {
                     : ""
                 }
                 ${
-                  entry.removalRequired
-                    ? `<small class="comment-preview">${t("removalRequired")}</small>`
-                    : ""
-                }
-                ${
                   entry.status === "Ready"
                     ? `<small class="quality-check-hint">${t("qualityCheck")}</small>`
                     : ""
@@ -914,6 +909,11 @@ function renderDesk() {
             <span><mark class="status ${statusClass(entry.status)}">${displayStatus(entry.status)}</mark></span>
             <span>${minutesBetween(entry.statusChangedAt)}</span>
             <div class="action-row">
+              ${
+                entry.removalRequired
+                  ? `<span class="action-removal-pill">${t("removalRequired")}</span>`
+                  : ""
+              }
               ${
                 entry.status === "Waiting" && !entry.orderTakenBy
                   ? `<button data-status="Order Taken" data-id="${entry.id}">${t("takeOrder")}</button>`

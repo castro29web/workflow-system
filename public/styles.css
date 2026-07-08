@@ -706,6 +706,18 @@ small {
   background: #123f72;
 }
 
+.action-removal-pill {
+  background: #fff4dd;
+  border: 1px solid #f0cd83;
+  border-radius: 8px;
+  color: #7a4a00;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 7px 10px;
+  text-transform: uppercase;
+}
+
 .quality-check-hint {
   background: #fff4dd;
   border: 1px solid #f0cd83;

@@ -90,6 +90,8 @@ function publicEntry(entry) {
     removalRequired: Boolean(entry.removalRequired),
     orderTakenBy: entry.orderTakenBy || "",
     orderTakenAt: entry.orderTakenAt || null,
+    preparedBy: entry.preparedBy || "",
+    preparedAt: entry.preparedAt || null,
     lastEditedBy: entry.lastEditedBy || "",
     lastEditedAt: entry.lastEditedAt || null,
     status: entry.status,
@@ -265,6 +267,8 @@ async function handleApi(req, res, url) {
       removalRequired: false,
       orderTakenBy: "",
       orderTakenAt: null,
+      preparedBy: "",
+      preparedAt: null,
       lastEditedBy: "",
       lastEditedAt: null,
       status: "Waiting",
@@ -300,6 +304,11 @@ async function handleApi(req, res, url) {
       const orderTakenBy = String(input.orderTakenBy || input.staffName || "").trim();
       if (orderTakenBy) entry.orderTakenBy = orderTakenBy.slice(0, 80);
       entry.orderTakenAt = new Date().toISOString();
+    }
+    if (input.status === "Ready") {
+      const preparedBy = String(input.preparedBy || input.staffName || "").trim();
+      if (preparedBy) entry.preparedBy = preparedBy.slice(0, 80);
+      entry.preparedAt = new Date().toISOString();
     }
     if (input.status !== "Order Taken") {
       recordEdit(entry, input.staffName);

@@ -892,6 +892,11 @@ small {
   overflow-wrap: anywhere;
 }
 
+.done-grid .audit-note-value {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .done-notes {
   align-items: start;
   display: grid;
@@ -995,14 +1000,14 @@ small {
 }
 
 .done-button {
-  background: #27364d;
-  border: 0;
-  border-radius: 8px;
-  color: white;
+  background: #eef5fb;
+  border: 1px solid #b8c9db;
+  border-radius: 999px;
+  color: var(--accent-dark);
   cursor: pointer;
-  font-weight: 900;
-  min-height: 44px;
-  padding: 0 18px;
+  font-weight: 800;
+  min-height: 38px;
+  padding: 0 16px;
 }
 
 .position {

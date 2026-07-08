@@ -56,6 +56,7 @@ const translations = {
     noCustomers: "No customers are waiting.",
     queueEmpty: "No customers are waiting.",
     noCompany: "No company",
+    none: "None",
     commentPrefix: "Comment",
     removalRequired: "Removal required",
     toGo: "To-Go",
@@ -94,6 +95,10 @@ const translations = {
     statusReady: "Order Done",
     finalizeOrder: "Finalize Order",
     qualityCheck: "Quality check!",
+    preparedBy: "Done by",
+    preparedAt: "Done at",
+    installerDoneTitle: "Finish order",
+    installerDonePrompt: "Who finished {name}'s order?",
     staffNameTitle: "Staff name required",
     staffNamePrompt: "Enter your name before changing this customer card.",
     staffName: "Staff name",
@@ -168,6 +173,7 @@ const translations = {
     noCustomers: "No hay clientes esperando.",
     queueEmpty: "No customers are waiting.",
     noCompany: "Sin compañía",
+    none: "Ninguna",
     commentPrefix: "Comentario",
     removalRequired: "Requiere remoción",
     toGo: "To-Go",
@@ -206,6 +212,10 @@ const translations = {
     statusReady: "Orden lista",
     finalizeOrder: "Finalizar orden",
     qualityCheck: "¡Revisión de calidad!",
+    preparedBy: "Terminada por",
+    preparedAt: "Terminada a las",
+    installerDoneTitle: "Terminar orden",
+    installerDonePrompt: "¿Quién terminó la orden de {name}?",
     staffNameTitle: "Nombre requerido",
     staffNamePrompt: "Ingrese su nombre antes de cambiar esta tarjeta de cliente.",
     staffName: "Nombre del empleado",
@@ -236,8 +246,7 @@ let queue = [];
 let completedOrders = [];
 let doneOrdersView = "hidden";
 const languageKey = "installQueue.language";
-const englishOnlyPage = window.location.pathname === "/display.html";
-let currentLanguage = englishOnlyPage ? "en" : localStorage.getItem(languageKey) || "en";
+let currentLanguage = localStorage.getItem(languageKey) || "en";
 const openCommentIds = new Set();
 const openDetailIds = new Set();
 const commentDrafts = new Map();
@@ -245,6 +254,8 @@ const contactDrafts = new Map();
 let pendingCommentFocusId = "";
 const staffNameKey = "installQueue.staffName";
 let frontDeskStaffName = sessionStorage.getItem(staffNameKey) || "";
+const installerNameKey = "installQueue.installerName";
+let installerStaffName = sessionStorage.getItem(installerNameKey) || "";
 const authKey = "installQueue.authenticated";
 const protectedPages = new Set();
 
@@ -278,8 +289,8 @@ function t(key) {
 }
 
 function applyLanguage(nextLanguage = currentLanguage) {
-  currentLanguage = englishOnlyPage ? "en" : nextLanguage;
-  if (!englishOnlyPage) localStorage.setItem(languageKey, currentLanguage);
+  currentLanguage = translations[nextLanguage] ? nextLanguage : "en";
+  localStorage.setItem(languageKey, currentLanguage);
   document.documentElement.lang = currentLanguage;
 
   document.querySelectorAll("[data-i18n]").forEach((node) => {
@@ -509,6 +520,46 @@ function showOrderTakerPrompt(customerName) {
   });
 }
 
+function showInstallerDonePrompt(customerName) {
+  return new Promise((resolve) => {
+    const existing = document.querySelector(".staff-overlay");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.className = "staff-overlay";
+    overlay.innerHTML = `
+      <form class="staff-card">
+        <p class="eyebrow">${t("installerDoneTitle")}</p>
+        <h2>${escapeHtml(t("installerDonePrompt").replace("{name}", customerName))}</h2>
+        <label>
+          <span>${t("staffName")}</span>
+          <input name="installerName" autocomplete="name" required />
+        </label>
+        <div class="staff-actions">
+          <button type="submit" class="primary-action">${t("continueAction")}</button>
+        </div>
+      </form>
+    `;
+
+    document.body.append(overlay);
+    const form = overlay.querySelector("form");
+    const input = overlay.querySelector("input");
+    input.value = installerStaffName;
+    input.focus();
+    input.select();
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = input.value.trim();
+      if (!name) return;
+      installerStaffName = name;
+      sessionStorage.setItem(installerNameKey, name);
+      overlay.remove();
+      resolve(name);
+    });
+  });
+}
+
 async function requireLogin({ locked = false, destination = "" } = {}) {
   if (await checkSession()) {
     if (destination) window.location.href = destination;
@@ -587,6 +638,14 @@ function isOrderTakenOnlyUpdate(entry) {
 
 function hasRealUpdate(entry) {
   return Boolean(entry.lastEditedBy) && !isOrderTakenOnlyUpdate(entry);
+}
+
+function companyValue(entry) {
+  return entry.company ? entry.company : t("none");
+}
+
+function companyLine(entry) {
+  return `${t("company")}: ${companyValue(entry)}`;
 }
 
 function contactDraftFor(entry) {
@@ -698,7 +757,7 @@ function renderDoneOrders() {
             <div>
               <span class="installer-label">${t("customerInfo")}</span>
               <h2>${escapeHtml(entry.name)}</h2>
-              <p>${escapeHtml(entry.company || t("noCompany"))}</p>
+              <p>${escapeHtml(companyLine(entry))}</p>
             </div>
             <mark class="status complete">${displayStatus(entry.status)}</mark>
           </header>
@@ -725,6 +784,14 @@ function renderDoneOrders() {
               <strong>${formatTimestamp(entry.orderTakenAt)}</strong>
             </div>
             <div>
+              <span>${t("preparedBy")}</span>
+              <strong>${escapeHtml(entry.preparedBy || t("notSet"))}</strong>
+            </div>
+            <div>
+              <span>${t("preparedAt")}</span>
+              <strong>${formatTimestamp(entry.preparedAt)}</strong>
+            </div>
+            <div>
               <span>${t("completedAtLabel")}</span>
               <strong>${formatTimestamp(entry.completedAt)}</strong>
             </div>
@@ -734,7 +801,7 @@ function renderDoneOrders() {
             </div>
             <div>
               <span>${t("updatedBy")}</span>
-              <strong>${escapeHtml(hasRealUpdate(entry) ? entry.lastEditedBy : t("notSet"))}</strong>
+              <strong class="audit-note-value">${escapeHtml(hasRealUpdate(entry) ? entry.lastEditedBy : t("notSet"))}</strong>
             </div>
           </div>
 
@@ -814,7 +881,7 @@ function renderDesk() {
                   </button>
                 </div>
                 <strong>${escapeHtml(entry.name)}</strong>
-                <small>${escapeHtml(entry.company || t("noCompany"))}</small>
+                <small>${escapeHtml(companyLine(entry))}</small>
                 ${
                   entry.comments
                     ? `<small class="comment-preview">${t("commentPrefix")}: ${escapeHtml(entry.comments)}</small>`
@@ -828,11 +895,6 @@ function renderDesk() {
                 ${
                   entry.status === "Ready"
                     ? `<small class="quality-check-hint">${t("qualityCheck")}</small>`
-                    : ""
-                }
-                ${
-                  hasRealUpdate(entry)
-                    ? `<small class="comment-preview">${t("updatedBy")} ${escapeHtml(entry.lastEditedBy)}</small>`
                     : ""
                 }
                 ${
@@ -1068,11 +1130,7 @@ function renderInstallers() {
               <span class="position">#${entry.position}</span>
               <h2>${escapeHtml(entry.name)}</h2>
             </div>
-            ${
-              entry.company
-                ? `<p class="installer-company">${escapeHtml(entry.company)}</p>`
-                : ""
-            }
+            <p class="installer-company">${escapeHtml(companyLine(entry))}</p>
             <div class="installer-details">
               <span>${t("statusUpdated")} <time datetime="${entry.statusChangedAt || ""}">${formatTimestamp(entry.statusChangedAt)}</time></span>
               ${
@@ -1103,7 +1161,12 @@ function renderInstallers() {
     .join("");
 
   list.querySelectorAll("button[data-installer-done]").forEach((button) => {
-    button.addEventListener("click", () => updateStatus(button.dataset.installerDone, "Ready"));
+    button.addEventListener("click", async () => {
+      const id = button.dataset.installerDone;
+      const entry = queue.find((item) => item.id === id);
+      const preparedBy = await showInstallerDonePrompt(entry?.name || "this order");
+      await updateStatus(id, "Ready", { preparedBy, staffName: preparedBy });
+    });
   });
 }
 

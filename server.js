@@ -8,6 +8,7 @@ import { createHash, randomUUID } from "node:crypto";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(__dirname, "public");
 const dataFile = process.env.DATA_FILE || join(__dirname, "data", "queue.json");
+const databaseUrl = process.env.DATABASE_URL || "";
 const accessPin = process.env.ACCESS_PIN || "7875";
 const publicApiBaseUrl = process.env.PUBLIC_API_BASE_URL || "";
 const authCookieName = "install_queue_auth";
@@ -20,6 +21,8 @@ const allowedOrigins = String(process.env.CORS_ORIGIN || "")
 const clients = new Set();
 const frontDeskClients = new Set();
 let entries = [];
+let pool = null;
+let storageMode = databaseUrl ? "postgres" : "file";
 
 const categoryOrder = ["Quote", "Pickup", "Place Order"];
 const statusOrder = ["Waiting", "To-Go", "Install", "Order Taken", "Ready", "Complete"];
@@ -33,10 +36,194 @@ const contentTypes = {
   ".svg": "image/svg+xml"
 };
 
-async function loadEntries() {
+const databaseColumns = [
+  "id",
+  "category",
+  "name",
+  "phone",
+  "company",
+  "email",
+  "comments",
+  "removal_required",
+  "job_type",
+  "order_taken_by",
+  "order_taken_at",
+  "prepared_by",
+  "prepared_at",
+  "last_edited_by",
+  "last_edited_at",
+  "status",
+  "signed_in_at",
+  "status_changed_at",
+  "completed_at"
+];
+
+function normalizeStoredEntry(entry) {
+  return {
+    id: String(entry.id || randomUUID()),
+    category: categoryOrder.includes(entry.category) ? entry.category : "Quote",
+    name: String(entry.name || "").trim() || "Unknown",
+    phone: String(entry.phone || "").trim(),
+    company: String(entry.company || "").trim(),
+    email: String(entry.email || "").trim(),
+    comments: String(entry.comments || "").trim(),
+    removalRequired: Boolean(entry.removalRequired),
+    jobType: String(entry.jobType || "").trim(),
+    orderTakenBy: String(entry.orderTakenBy || "").trim(),
+    orderTakenAt: entry.orderTakenAt || null,
+    preparedBy: String(entry.preparedBy || "").trim(),
+    preparedAt: entry.preparedAt || null,
+    lastEditedBy: String(entry.lastEditedBy || "").trim(),
+    lastEditedAt: entry.lastEditedAt || null,
+    status: statusOrder.includes(entry.status) ? entry.status : "Waiting",
+    signedInAt: entry.signedInAt || new Date().toISOString(),
+    statusChangedAt: entry.statusChangedAt || null,
+    completedAt: entry.completedAt || null
+  };
+}
+
+function databaseSslConfig() {
+  if (!databaseUrl) return undefined;
+  if (databaseUrl.includes("localhost") || databaseUrl.includes("127.0.0.1")) return false;
+  if (databaseUrl.includes("sslmode=disable")) return false;
+  return { rejectUnauthorized: false };
+}
+
+async function initDatabase() {
+  if (!databaseUrl || pool) return;
+
+  const { Pool } = await import("pg");
+  const ssl = databaseSslConfig();
+  pool = new Pool({
+    connectionString: databaseUrl,
+    ...(ssl === undefined ? {} : { ssl })
+  });
+  storageMode = "postgres";
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS queue_entries (
+      id text PRIMARY KEY,
+      category text NOT NULL,
+      name text NOT NULL,
+      phone text NOT NULL,
+      company text NOT NULL DEFAULT '',
+      email text NOT NULL DEFAULT '',
+      comments text NOT NULL DEFAULT '',
+      removal_required boolean NOT NULL DEFAULT false,
+      job_type text NOT NULL DEFAULT '',
+      order_taken_by text NOT NULL DEFAULT '',
+      order_taken_at timestamptz,
+      prepared_by text NOT NULL DEFAULT '',
+      prepared_at timestamptz,
+      last_edited_by text NOT NULL DEFAULT '',
+      last_edited_at timestamptz,
+      status text NOT NULL,
+      signed_in_at timestamptz NOT NULL,
+      status_changed_at timestamptz,
+      completed_at timestamptz
+    )
+  `);
+}
+
+function rowToEntry(row) {
+  return normalizeStoredEntry({
+    id: row.id,
+    category: row.category,
+    name: row.name,
+    phone: row.phone,
+    company: row.company,
+    email: row.email,
+    comments: row.comments,
+    removalRequired: row.removal_required,
+    jobType: row.job_type,
+    orderTakenBy: row.order_taken_by,
+    orderTakenAt: row.order_taken_at ? row.order_taken_at.toISOString() : null,
+    preparedBy: row.prepared_by,
+    preparedAt: row.prepared_at ? row.prepared_at.toISOString() : null,
+    lastEditedBy: row.last_edited_by,
+    lastEditedAt: row.last_edited_at ? row.last_edited_at.toISOString() : null,
+    status: row.status,
+    signedInAt: row.signed_in_at ? row.signed_in_at.toISOString() : null,
+    statusChangedAt: row.status_changed_at ? row.status_changed_at.toISOString() : null,
+    completedAt: row.completed_at ? row.completed_at.toISOString() : null
+  });
+}
+
+function entryValues(entry) {
+  return [
+    entry.id,
+    entry.category,
+    entry.name,
+    entry.phone,
+    entry.company || "",
+    entry.email || "",
+    entry.comments || "",
+    Boolean(entry.removalRequired),
+    entry.jobType || "",
+    entry.orderTakenBy || "",
+    entry.orderTakenAt || null,
+    entry.preparedBy || "",
+    entry.preparedAt || null,
+    entry.lastEditedBy || "",
+    entry.lastEditedAt || null,
+    entry.status,
+    entry.signedInAt,
+    entry.statusChangedAt || null,
+    entry.completedAt || null
+  ];
+}
+
+async function loadFileEntries() {
+  const raw = await readFile(dataFile, "utf8");
+  const parsed = JSON.parse(raw);
+  return Array.isArray(parsed) ? parsed.map(normalizeStoredEntry) : [];
+}
+
+async function importFileEntriesIntoDatabase() {
   try {
-    const raw = await readFile(dataFile, "utf8");
-    entries = JSON.parse(raw);
+    const fileEntries = await loadFileEntries();
+    if (!fileEntries.length) return;
+    entries = fileEntries;
+    await persistDatabaseEntries();
+    console.log(`Imported ${fileEntries.length} queue entries from JSON file into Postgres.`);
+  } catch {
+    // Nothing to import. Fresh databases can start empty.
+  }
+}
+
+async function persistDatabaseEntries() {
+  await initDatabase();
+  if (!pool) return;
+
+  const placeholders = databaseColumns.map((_, index) => `$${index + 1}`).join(", ");
+  const updateColumns = databaseColumns
+    .filter((column) => column !== "id")
+    .map((column) => `${column}=EXCLUDED.${column}`)
+    .join(", ");
+
+  for (const entry of entries.map(normalizeStoredEntry)) {
+    await pool.query(
+      `
+        INSERT INTO queue_entries (${databaseColumns.join(", ")})
+        VALUES (${placeholders})
+        ON CONFLICT (id) DO UPDATE SET ${updateColumns}
+      `,
+      entryValues(entry)
+    );
+  }
+}
+
+async function loadEntries() {
+  if (databaseUrl) {
+    await initDatabase();
+    const result = await pool.query("SELECT * FROM queue_entries ORDER BY signed_in_at ASC");
+    entries = result.rows.map(rowToEntry);
+    if (!entries.length) await importFileEntriesIntoDatabase();
+    return;
+  }
+
+  try {
+    entries = await loadFileEntries();
   } catch {
     entries = [];
     await persistEntries();
@@ -44,6 +231,11 @@ async function loadEntries() {
 }
 
 async function persistEntries() {
+  if (databaseUrl) {
+    await persistDatabaseEntries();
+    return;
+  }
+
   const dataDir = dirname(dataFile);
   await mkdir(dataDir, { recursive: true });
   await writeFile(dataFile, JSON.stringify(entries, null, 2));
@@ -191,7 +383,7 @@ async function handleApi(req, res, url) {
   }
 
   if (req.method === "GET" && url.pathname === "/api/health") {
-    sendJson(res, 200, { ok: true, uptime: process.uptime() }, cors);
+    sendJson(res, 200, { ok: true, uptime: process.uptime(), storage: storageMode }, cors);
     return;
   }
 

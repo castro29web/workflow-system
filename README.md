@@ -18,7 +18,8 @@ Yes. The frontend can be hosted anywhere, but the app requires the Node backend 
 - Updating statuses and comments
 - Showing done orders
 - Keeping every screen live with Server-Sent Events
-- Persisting queue data in `data/queue.json` or the path set by `DATA_FILE`
+- Persisting queue data in Supabase/Postgres when `DATABASE_URL` is set
+- Falling back to `data/queue.json` or `DATA_FILE` when no database is configured
 
 The easiest production deployment is one Node server running both the frontend and backend together.
 
@@ -36,9 +37,12 @@ Copy `.env.example` when you need environment-specific values.
 | `PORT` | No | `3000` | HTTP port for the Node server. |
 | `HOST` | No | `0.0.0.0` | Bind address. Use `0.0.0.0` so tablets, TVs, and employees can connect on the network. |
 | `ACCESS_PIN` | No | `7875` | PIN used when exiting customer sign-in. Change this for production. |
+| `DATABASE_URL` | No | empty | Supabase/Postgres connection string for permanent cloud storage. Recommended on Render. |
 | `DATA_FILE` | No | `./data/queue.json` | JSON persistence file for queue data. Use a mounted volume on a server. |
 | `PUBLIC_API_BASE_URL` | No | empty | Browser API base URL. Leave empty when frontend and backend are same-origin. |
 | `CORS_ORIGIN` | No | empty | Allowed frontend origin when frontend and backend are on different domains. |
+
+When `DATABASE_URL` is set, the app creates the `queue_entries` table automatically and stores all customer cards in Postgres. When `DATABASE_URL` is blank, it uses the JSON file mode.
 
 ## Local Run
 
@@ -96,12 +100,42 @@ Health check:
 curl http://localhost:3000/api/health
 ```
 
+The health check includes `"storage":"postgres"` when the app is using Supabase/Postgres.
+
+## Production: Render With Supabase
+
+This is the easiest online setup for the business because employees can open one normal website link from phones, tablets, TVs, and computers.
+
+1. Create a Supabase project.
+2. In Supabase, open the project dashboard and copy the Postgres connection string. The session pooler connection string is usually the safest choice for hosted apps.
+3. In Render, open your `workflow-system` web service.
+4. Go to `Environment`.
+5. Add or update these environment variables:
+
+```sh
+DATABASE_URL=your-supabase-postgres-connection-string
+ACCESS_PIN=7875
+HOST=0.0.0.0
+```
+
+6. Leave `DATA_FILE` blank when using Supabase.
+7. Save changes.
+8. Click `Manual Deploy` and then `Deploy latest commit`.
+9. After deploy, open:
+
+```text
+https://your-render-url.onrender.com/api/health
+```
+
+You should see `"storage":"postgres"`. After that, customer cards will stay stored even when Render restarts.
+
 ## Production: Docker
 
 ```sh
 docker build -t workflow-system .
 docker run -p 3000:3000 \
   -e ACCESS_PIN=change-this-pin \
+  -e DATABASE_URL=your-postgres-url \
   -e DATA_FILE=/data/queue.json \
   -v workflow-system-data:/data \
   workflow-system
@@ -166,5 +200,5 @@ These are supported by current Chrome, Edge, Firefox, and Safari. No Codex previ
 
 - Same-origin deployment is simplest: one Node server, no CORS needed.
 - Separate frontend/backend deployment requires `PUBLIC_API_BASE_URL` on the frontend and `CORS_ORIGIN` on the backend.
-- Vercel and Netlify are not recommended for the backend because this app uses long-lived Server-Sent Events and file-based persistence.
-- For real business data, back up `DATA_FILE` or replace the JSON file persistence with a managed database.
+- Vercel and Netlify are not recommended for the backend because this app uses long-lived Server-Sent Events.
+- For real business data, use `DATABASE_URL` with Supabase/Postgres. JSON file storage is best for local testing only.
